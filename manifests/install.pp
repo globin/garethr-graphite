@@ -5,7 +5,6 @@ class graphite::install {
   package {[
     'python-ldap',
     'python-cairo',
-    'python-django',
     'python-twisted',
     'python-django-tagging',
     'python-simplejson',
@@ -15,6 +14,13 @@ class graphite::install {
     'python-support',
   ]:
     ensure => latest;
+  }
+
+  exec { 'ensure-old-enough-django-for-graphite-web':
+    path => ['/usr/bin', '/usr/local/bin'],
+    command => 'pip install Django\<1.4',
+    creates => '/usr/local/bin/django-admin.py',
+    require => Package['python-pip'],
   }
 
   exec { 'install-carbon':
