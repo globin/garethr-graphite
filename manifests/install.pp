@@ -1,10 +1,15 @@
 class graphite::install {
 
-  include python
+  if $graphite::manage_python {
+    include python
+  } else {
+    ensure_packages(['python-pip'])
+  }
 
-  package {[
+  ensure_packages([
     'python-ldap',
     'python-cairo',
+    'python-django',
     'python-twisted',
     'python-django-tagging',
     'python-simplejson',
@@ -12,37 +17,30 @@ class graphite::install {
     'python-memcache',
     'python-pysqlite2',
     'python-support',
-  ]:
-    ensure => latest;
-  }
+  ])
 
-  exec { 'ensure-old-enough-django-for-graphite-web':
-    path => ['/usr/bin', '/usr/local/bin'],
-    command => 'pip install Django\<1.4',
-    creates => '/usr/local/bin/django-admin.py',
-    require => Package['python-pip'],
-  }
+  Package['python-pip'] -> Package <| provider == 'pip' and ensure != absent and ensure != purged |>
 
-  exec { 'install-carbon':
-    command => 'pip install carbon',
-    creates => '/opt/graphite/lib/carbon',
-    require => Class['python'],
-  }
-
-  exec { 'install-graphite-web':
-    command => 'pip install graphite-web',
-    creates => '/opt/graphite/webapp/graphite',
-    require => Class['python'],
-  }
-
-  package { 'whisper':
+  package { ['whisper', 'carbon', 'graphite-web']:
     ensure   => installed,
     provider => pip,
-    require => Class['python'],
+    require  => Class['python'],
   }
 
   file { '/var/log/carbon':
     ensure => directory,
+    owner  => www-data,
+    group  => www-data,
+  }
+
+  file {'/var/lib/graphite':
+    ensure => directory,
+    owner  => www-data,
+    group  => www-data,
+  }
+
+  file {'/var/lib/graphite/db.sqlite3':
+    ensure => present,
     owner  => www-data,
     group  => www-data,
   }
