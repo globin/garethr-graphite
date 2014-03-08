@@ -6,6 +6,10 @@ class graphite::install {
     ensure_packages(['python-pip'])
   }
 
+  if $graphite::manage_webserver {
+    ensure_packages(['libapache2-mod-python'])
+  }
+
   ensure_packages([
     'python-ldap',
     'python-cairo',
@@ -13,7 +17,6 @@ class graphite::install {
     'python-twisted',
     'python-django-tagging',
     'python-simplejson',
-    'libapache2-mod-python',
     'python-memcache',
     'python-pysqlite2',
     'python-support',
